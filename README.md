@@ -8,7 +8,7 @@
 
 
 ## Project
-***
+
 
 이번 프로젝트에서는 video streaming 사이트 개발을 하기로 해본다.
 단순하게 video를 업로드하고 서버에서 스트리밍 하는 기능을 구현함으로 video 플랫폼의 원리를 이해하는 것을 목표로 하였다. 
@@ -25,7 +25,7 @@
 <br/>
 
 ## Dependency
-***
+
 
 [mongodb](https://www.npmjs.com/package/mongodb)
 
@@ -40,7 +40,7 @@
 <br/>
 
 ## Component
-***
+
 
 + setFile to useState
 
@@ -93,7 +93,7 @@ const submitHandler: React.MouseEventHandler<HTMLButtonElement> = async () => {
 <br/>
 
 ## API
-***
+
 
 + upload Video to DB
 > what is **[GridFS](https://github.com/gkdfo40/TIL/blob/main/GridFS.md)** ??
