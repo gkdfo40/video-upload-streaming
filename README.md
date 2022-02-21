@@ -1,34 +1,135 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 📼Upload Video _with Next.js_
 
-## Getting Started
+ + [Project](#project)
+ + [Dependency](#dependency)
+ + [Component](#component)
+ + [API](#api)
+ + [Next_Step](#next-step)
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
+## Project
+***
+
+이번 프로젝트에서는 video streaming 사이트 개발을 하기로 해본다.
+단순하게 video를 업로드하고 서버에서 스트리밍 하는 기능을 구현함으로 video 플랫폼의 원리를 이해하는 것을 목표로 하였다. 
+클라이언트는 React 프레임워크인 [Next.js](https://nextjs.org/)를 사용하였다.
+
+처음에는 사용자가 전송한 video 파일을 서버에서 Buffer로 받아 DB로 저장하려고 하였다.
+하지만 다수의 사용자가 영상을 동시에 올려려 한다면 스트리밍도 해야하는 서버에 부담이 될 수도 있다. 때문에 서버는 스트리밍하는 역할만 담당하고 업로드는 클라이언트에서 담당하게 하여 역할을 분리하였다.
+
+<br/>
+- Upload flow
+
+<img src="https://miro.medium.com/max/1400/1*DppKKMCdxCf4eueofUN6eQ.png" width="45%" height="45%">
+
+<br/>
+
+## Dependency
+***
+
+[mongodb](https://www.npmjs.com/package/mongodb)
+
+[axios](https://axios-http.com/)
+
+[busboy](https://www.npmjs.com/package/busboy)
+
+`yarn create next-app --typescript`
+
+`yarn add mongodb axios busboy @types/busboy -D`
+
+<br/>
+
+## Component
+***
+
++ setFile to useState
+
+```typescript
+const setFileHandler: React.ChangeEventHandler<HTMLInputElement> = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+
+    if (files?.length) {
+        setFile(files[0]);
+    }
+}
+```
+<br/>
+
++ submit to `/api/videos` page
+
+```Typescript
+const submitHandler: React.MouseEventHandler<HTMLButtonElement> = async () => {
+    const data = new FormData;
+
+    if (!file) return;
+
+    setSubmitting(true);
+    data.append('file', file);
+
+    // upload percentage
+    // progressEvent info (https://developer.mozilla.org/en-US/docs/Web/API/ProgressEvent)
+    const config: AxiosRequestConfig = {
+        onUploadProgress: function (progressEvent) {
+            let percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setProcess(percentage);
+        }
+    };
+
+    try {
+        await axios.post('/api/videos', data, config);
+        console.log(`video upload is Done.`);
+    } catch (error: any) {
+        setError(error.message);
+    } finally {
+        setSubmitting(false);
+        setProcess(0);
+    }
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+<br/>
+<img src="./public/post1.PNG">
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+<br/>
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## API
+***
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
++ upload Video to DB
+> what is **[GridFS](https://github.com/gkdfo40/TIL/blob/main/GridFS.md)** ??
 
-## Learn More
+```typescript
+async function uploadVideoStream(
+    req: NextApiRequest,
+    res: NextApiResponse
+) {
+    const bb = busboy({ headers: req.headers });
+    const client: MongoClient = new MongoClient(dbUri);
+    await client.connect();
+    const db: Db = client.db('videos');
+    const bucket = new GridFSBucket(db);
+    bb.on('file', (name, file, info) => {
+        const { filename, encoding, mimeType } = info;
+        console.log(`File[${name}]: filename: ${filename}, encoding: ${encoding}, mimeType: ${mimeType}`);
 
-To learn more about Next.js, take a look at the following resources:
+        const videoUploadStream = bucket.openUploadStream(filename, {
+            chunkSizeBytes: 3145728,
+            metadata: { field: "free", value: "vlog" }
+        });
+        file.pipe(videoUploadStream);
+    });
+    bb.on('close', () => {
+        console.log('Done parsing video!');
+        res.writeHead(200, { 'Connection': 'close' });
+        res.end(`That's all folks`);
+    });
+    req.pipe(bb);
+    return;
+}
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+<br/>
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Next Step
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+🦄🦄 **Video List viewer & streaming server**
