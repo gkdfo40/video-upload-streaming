@@ -16,6 +16,8 @@ const Home: NextPage = () => {
       <main className={styles.main}>
         <VideoUploader />
       </main>
+      <nav>
+      </nav>
     </div>
   )
 }
