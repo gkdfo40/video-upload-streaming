@@ -5,13 +5,17 @@ import { useRouter } from "next/router";
 export default function VideoPage() {
     const router = useRouter();
     const { id } = router.query as { id: string };
-    return <VideoPlayer id={id} />
+    return (
+        <div>
+            <VideoPlayer id={id} />
+        </div>
+    )
 }
 
-// export const getServerSideProps: GetServerSideProps = async (context) => {
-//     return {
-//         props: {
-//             query:context.query
-//         },
-//     }
-// }
+export const getServerSideProps: GetServerSideProps = async (context) => {
+    return {
+        props: {
+            query: context.query
+        },
+    }
+}
