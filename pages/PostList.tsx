@@ -1,14 +1,25 @@
+import { ObjectId } from "mongodb";
 import { GetStaticProps } from "next";
 import Link from "next/link";
 
-type Post = { filename: string }
+type Post = {
+    _id: ObjectId,
+    length: Number,
+    chunkSize: Number,
+    uploadDate: Date,
+    filename: string,
+    metadata: {
+        field: string,
+        value: string,
+    }
+}
 
 const PostList = ({ posts }: { posts: Post[] }) => {
     return (
         <div>
             {posts.map((post, index) => (
                 <Link key={index} href="/videos/[id]" as={`/videos/${post.filename}`}>
-                    <a>watch {post.filename}</a>
+                    <a><p>watch {post.filename}</p></a>
                 </Link>
             ))}
         </div>
